@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARQUIVO SOMBRIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #090909;
+  --bg2: #111;
+  --bg3: #181818;
+  --bg4: #1e1e1e;
+  --b0: rgba(255,255,255,0.05);
+  --b1: rgba(255,255,255,0.11);
+  --tp: #e8e2d4;
+  --tm: #7a7060;
+  --td: #4a4540;
+  --red: #c0392b;
+  --red2: #e74c3c;
+  --amb: #d4a017;
+  --tea: #27ae8a;
+  --pur: #6c3483;
+  --pur2: #9b59b6;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--tp);
+  font-family: 'Courier Prime', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* scanline */
+body::after {
+  content:'';
+  position:fixed; inset:0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  pointer-events:none;
+  z-index:9998;
+}
+/* alert bar */
+.alert {
+  background: rgba(192,57,43,.08);
+  border-bottom: 1px solid rgba(192,57,43,.18);
+  padding: 9px 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.alert-inner {
+  display: inline-block;
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--red2);
+  animation: marquee 35s linear infinite;
+}
+@keyframes marquee { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+@keyframes flicker { 0%,96%,100%{opacity:1} 97%{opacity:.2} 98%{opacity:.9} 99%{opacity:.3} }
+@keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+/* header */
+header {
+  text-align: center;
+  padding: 48px 24px 30px;
+  border-bottom: 1px solid var(--b0);
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(192,57,43,.07) 0%, transparent 70%);
+  pointer-events:none;
+}
+.eyebrow {
+  font-family:'Oswald',sans-serif;
+  font-size:10px; letter-spacing:6px; text-transform:uppercase;
+  color:var(--red); margin-bottom:14px;
+  animation: flicker 5s infinite;
+}
+.htitle {
+  font-family:'Special Elite',cursive;
+  font-size: clamp(34px,6vw,68px);
+  line-height:1; color:var(--tp);
+  text-shadow: 0 0 50px rgba(192,57,43,.18);
+  margin-bottom:10px;
+}
+.htitle em { color:var(--red); font-style:normal; }
+.hsub {
+  font-family:'Oswald',sans-serif;
+  font-weight:300; font-size:12px; letter-spacing:4px;
+  color:var(--tm); text-transform:uppercase;
+}
+.hdivider {
+  display:flex; align-items:center; gap:12px;
+  max-width:360px; margin:20px auto 0;
+  color:var(--td); font-size:10px; letter-spacing:2px;
+}
+.hdivider::before,.hdivider::after { content:''; flex:1; height:1px; background:var(--b0); }
+
+/* NAV */
+nav {
+  position: sticky; top:0; z-index:500;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--b0);
+}
+.tabs { display:flex; max-width:1100px; margin:0 auto; }
+.tbtn {
+  flex:1; padding:0;
+  background:transparent; border:none;
+  cursor:pointer; position:relative; overflow:hidden;
+  outline:none;
+}
+.tbtn-in {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:15px 10px;
+  font-family:'Oswald',sans-serif;
+  font-size:12px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--tm);
+  transition: color .2s, background .2s;
+}
+.tbtn::after {
+  content:''; position:absolute;
+  bottom:0; left:0; right:0; height:2px;
+  transform:scaleX(0);
+  transition:transform .25s ease;
+}
+.tbtn[data-t="v"]::after  { background:var(--red); }
+.tbtn[data-t="t"]::after  { background:var(--pur2); }
+.tbtn[data-t="d"]::after  { background:var(--amb); }
+.tbtn[data-t="n"]::after  { background:var(--tea); }
+.tbtn.on .tbtn-in  { color:var(--tp); }
+.tbtn.on::after    { transform:scaleX(1); }
+.tbtn:hover .tbtn-in { color:var(--tp); background:rgba(255,255,255,.02); }
+
+/* PANELS */
+.wrap { max-width:1100px; margin:0 auto; padding:40px 24px 80px; }
+.panel { display:none; }
+.panel.on { display:block; }
+
+/* section heading */
+.sh { display:flex; align-items:center; gap:14px; margin-bottom:28px; }
+.sh-line { flex:1; height:1px; background:var(--b0); }
+.sh-txt { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--td); white-space:nowrap; }
+
+/* input row */
+.iblock {
+  background:var(--bg4); border:1px solid var(--b0);
+  padding:18px 20px; margin-bottom:28px;
+}
+.ilabel { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--tm); display:block; margin-bottom:8px; }
+.irow { display:flex; }
+.itext {
+  flex:1; background:var(--bg); border:1px solid var(--b0); border-right:none;
+  color:var(--tp); font-family:'Courier Prime',monospace; font-size:13px;
+  padding:9px 12px; outline:none;
+}
+.itext:focus { border-color:rgba(255,255,255,.18); }
+.itext::placeholder { color:var(--td); }
+.ibtn {
+  background:var(--red); border:none; color:#fff;
+  font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:9px 18px; cursor:pointer; transition:background .2s; white-space:nowrap;
+}
+.ibtn:hover { background:var(--red2); }
+.ibtn.pur { background:var(--pur); }
+.ibtn.pur:hover { background:var(--pur2); }
+.ibtn.tea { background:var(--tea); color:#000; }
+
+/* video block */
+.vblock {
+  background:var(--bg3); border:1px solid var(--b0);
+  margin-bottom:28px; overflow:hidden; position:relative;
+}
+.vblock::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.vblock.red::before { background:var(--red); }
+.vblock.pur::before { background:var(--pur2); }
+.vhead { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; border-bottom:1px solid var(--b0); }
+.vlabel { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--tm); }
+.vstatus { font-size:10px; letter-spacing:2px; animation:pulse 2s infinite; }
+.vcont { position:relative; padding-bottom:56.25%; background:#000; }
+.vcont iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+.vph {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  background:#050505; color:var(--td);
+}
+.vph-icon { font-size:36px; opacity:.25; }
+.vph p { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; opacity:.35; }
+
+/* video grid */
+.vgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; margin-bottom:28px; }
+.vcard {
+  background:var(--bg3); border:1px solid var(--b0);
+  cursor:pointer; transition:border-color .2s, transform .2s; overflow:hidden;
+}
+.vcard:hover { border-color:var(--b1); transform:translateY(-2px); }
+.vthumb { width:100%; aspect-ratio:16/9; background:#000; position:relative; overflow:hidden; }
+.vthumb-ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--td); opacity:.3; }
+.vinfo { padding:12px 14px; }
+.vtag { display:inline-block; font-size:8px; letter-spacing:2px; text-transform:uppercase; padding:2px 8px; background:rgba(192,57,43,.12); color:var(--red2); border:1px solid rgba(192,57,43,.25); margin-bottom:8px; }
+.vtitle { font-family:'Special Elite',cursive; font-size:14px; color:var(--tp); margin-bottom:4px; line-height:1.4; }
+.vmeta { font-size:10px; color:var(--td); letter-spacing:1px; }
+.vadd-btn {
+  background:transparent; border:1px solid var(--b0); color:var(--tm);
+  font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  padding:7px 14px; cursor:pointer; transition:border-color .2s, color .2s;
+}
+.vadd-btn:hover { border-color:var(--red); color:var(--red); }
+
+/* teoria */
+.tblock {
+  background:var(--bg3); border:1px solid var(--b0); border-left:3px solid var(--pur2);
+  padding:24px; margin-bottom:20px;
+}
+.tblock.red { border-left-color:var(--red); }
+.ttag { display:inline-block; font-size:8px; letter-spacing:2px; text-transform:uppercase; padding:2px 9px; background:rgba(108,52,131,.18); color:var(--pur2); border:1px solid rgba(108,52,131,.35); margin-bottom:12px; }
+.ttag.red { background:rgba(192,57,43,.12); color:var(--red2); border-color:rgba(192,57,43,.3); }
+.stamp { display:inline-block; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:var(--red); border:2px solid var(--red); padding:3px 10px; transform:rotate(-2deg); opacity:.6; margin-left:12px; vertical-align:middle; }
+.tblock h3 { font-family:'Special Elite',cursive; font-size:20px; color:var(--tp); margin:14px 0 14px; line-height:1.3; }
+.tblock p { font-size:13px; line-height:1.9; color:var(--tp); opacity:.82; margin-bottom:14px; }
+.tblock p:last-child { margin-bottom:0; }
+.redact { background:var(--tp); color:var(--tp); padding:0 3px; user-select:none; }
+.tform { background:var(--bg4); border:1px solid var(--b0); border-left:3px solid var(--pur2); padding:20px; margin-top:24px; }
+.tform textarea, .tform input[type="text"] {
+  width:100%; background:var(--bg); border:1px solid var(--b0);
+  color:var(--tp); font-family:'Courier Prime',monospace; font-size:13px;
+  padding:9px 12px; outline:none; margin-bottom:8px; resize:vertical;
+}
+.tform textarea:focus, .tform input[type="text"]:focus { border-color:rgba(255,255,255,.18); }
+.tform input::placeholder, .tform textarea::placeholder { color:var(--td); }
+
+/* notícias */
+.nform { background:var(--bg4); border:1px solid var(--b0); border-left:3px solid var(--tea); padding:20px; margin-bottom:32px; }
+.ngrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.nfield { display:flex; flex-direction:column; gap:5px; }
+.nfield.full { grid-column:1/-1; }
+.ninput, .nselect, .ntextarea {
+  background:var(--bg); border:1px solid var(--b0);
+  color:var(--tp); font-family:'Courier Prime',monospace; font-size:13px;
+  padding:8px 12px; outline:none; resize:vertical;
+}
+.ninput:focus,.nselect:focus,.ntextarea:focus { border-color:rgba(255,255,255,.18); }
+.ninput::placeholder,.ntextarea::placeholder { color:var(--td); }
+.nselect option { background:var(--bg); }
+.nsubmit {
+  background:transparent; border:1px solid var(--tea); color:var(--tea);
+  font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  padding:9px 22px; cursor:pointer; transition:background .2s, color .2s;
+}
+.nsubmit:hover { background:var(--tea); color:#000; }
+.nlist { display:flex; flex-direction:column; }
+.nitem { border-bottom:1px solid var(--b0); padding:24px 0; }
+.nitem:first-child { border-top:1px solid var(--b0); }
+.nmeta { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.ntag { font-size:8px; letter-spacing:2px; text-transform:uppercase; padding:2px 9px; border:1px solid; }
+.ntag.c { color:var(--red2); border-color:rgba(192,57,43,.35); background:rgba(192,57,43,.08); }
+.ntag.l { color:var(--amb); border-color:rgba(212,160,23,.35); background:rgba(212,160,23,.08); }
+.ntag.k { color:var(--tea); border-color:rgba(39,174,138,.35); background:rgba(39,174,138,.08); }
+.ntag.r { color:var(--pur2); border-color:rgba(155,89,182,.35); background:rgba(155,89,182,.08); }
+.ndate { font-size:10px; color:var(--td); letter-spacing:1px; }
+.ntitle { font-family:'Special Elite',cursive; font-size:19px; color:var(--tp); margin-bottom:9px; line-height:1.3; }
+.nexcerpt { font-size:13px; line-height:1.8; color:var(--tp); opacity:.7; margin-bottom:12px; }
+.nlink { display:inline-flex; align-items:center; gap:5px; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--tea); text-decoration:none; border-bottom:1px solid rgba(39,174,138,.3); padding-bottom:1px; transition:color .2s; }
+.nlink:hover { color:var(--tp); }
+
+/* documentos */
+.dropzone {
+  border:2px dashed rgba(212,160,23,.3); background:rgba(212,160,23,.02);
+  padding:44px 24px; text-align:center; margin-bottom:28px;
+  cursor:pointer; transition:border-color .2s, background .2s;
+  position:relative; overflow:hidden;
+}
+.dropzone:hover { border-color:rgba(212,160,23,.6); background:rgba(212,160,23,.04); }
+.dropzone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.dicon { font-size:36px; margin-bottom:10px; opacity:.35; color:var(--amb); }
+.dtxt { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--amb); margin-bottom:4px; }
+.dsub { font-size:10px; color:var(--td); letter-spacing:1px; }
+.dlist { display:flex; flex-direction:column; }
+.ditem { display:flex; align-items:center; gap:14px; padding:16px 0; border-bottom:1px solid var(--b0); }
+.ditem:first-child { border-top:1px solid var(--b0); }
+.dicn { width:42px; height:50px; background:rgba(212,160,23,.08); border:1px solid rgba(212,160,23,.18); display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
+.dicn::after { content:'PDF'; font-family:'Oswald',sans-serif; font-size:8px; letter-spacing:1px; color:var(--amb); position:absolute; bottom:3px; }
+.dicn-sym { font-size:18px; color:var(--amb); opacity:.5; }
+.dinfo { flex:1; min-width:0; }
+.dname { font-family:'Special Elite',cursive; font-size:15px; color:var(--tp); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dmeta { font-size:10px; color:var(--td); letter-spacing:1px; }
+.dacts { display:flex; gap:7px; }
+.dbtn { background:transparent; border:1px solid var(--b0); color:var(--tm); font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:6px 12px; cursor:pointer; transition:border-color .2s, color .2s; }
+.dbtn:hover { border-color:var(--amb); color:var(--amb); }
+.dbtn a { color:inherit; text-decoration:none; }
+
+/* footer */
+footer { border-top:1px solid var(--b0); padding:20px; text-align:center; font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:3px; color:var(--td); text-transform:uppercase; }
+
+/* modal overlay for video card input */
+.modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:1000; align-items:center; justify-content:center; }
+.modal-bg.show { display:flex; }
+.modal { background:var(--bg3); border:1px solid var(--b1); border-top:2px solid var(--red); padding:28px; min-width:340px; max-width:480px; width:90%; }
+.modal h4 { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--tm); margin-bottom:16px; }
+.modal input[type="text"], .modal input[type="url"] {
+  width:100%; background:var(--bg); border:1px solid var(--b0); color:var(--tp);
+  font-family:'Courier Prime',monospace; font-size:13px; padding:9px 12px; outline:none; margin-bottom:10px;
+}
+.modal input:focus { border-color:rgba(255,255,255,.18); }
+.modal input::placeholder { color:var(--td); }
+.modal-btns { display:flex; gap:10px; margin-top:4px; }
+.modal-ok { background:var(--red); border:none; color:#fff; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:9px 20px; cursor:pointer; }
+.modal-cancel { background:transparent; border:1px solid var(--b0); color:var(--tm); font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:9px 20px; cursor:pointer; }
+
+@media(max-width:600px){
+  .ngrid{grid-template-columns:1fr;}
+  .vgrid{grid-template-columns:1fr;}
+  .tbtn-in{flex-direction:column;gap:3px;font-size:9px;padding:11px 4px;}
+}
+</style>
+</head>
+<body>
+
+<div class="alert"><span>⚠ ACESSO RESTRITO — ARQUIVO CONFIDENCIAL — NÍVEL VERMELHO — OS OLHOS QUE VEEM NÃO PODEM SER VISTOS — EPSTEIN NÃO SUICIDOU-SE — ILUMINATI CONFIRMADOS — ARQUIVOS DESCLASSIFICADOS — ⚠ ACESSO RESTRITO — ARQUIVO CONFIDENCIAL —</span></div>
+
+<header>
+  <div class="eyebrow">// arquivo.sombrio // clearance: vermelho //</div>
+  <h1 class="htitle">TEORIAS DO <em>UNIVERSO</em></h1>
+  <p class="hsub">O que eles não querem que você saiba</p>
+  <div class="hdivider">◆ &nbsp; documento classificado &nbsp; ◆</div>
+</header>
+
+<nav>
+  <div class="tabs">
+    <button class="tbtn on" data-t="v" id="btn-v">
+      <div class="tbtn-in">▶ &nbsp;Vídeos</div>
+    </button>
+    <button class="tbtn" data-t="t" id="btn-t">
+      <div class="tbtn-in">◉ &nbsp;Teoria</div>
+    </button>
+    <button class="tbtn" data-t="d" id="btn-d">
+      <div class="tbtn-in">▣ &nbsp;Documentos</div>
+    </button>
+    <button class="tbtn" data-t="n" id="btn-n">
+      <div class="tbtn-in">◈ &nbsp;Notícias</div>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== VÍDEOS ===== -->
+<div class="wrap panel on" id="pnl-v">
+
+  <div class="sh"><div class="sh-txt">Carregar Vídeo</div><div class="sh-line"></div></div>
+
+  <div class="iblock">
+    <span class="ilabel">↳ colar link do YouTube</span>
+    <div class="irow">
+      <input class="itext" type="url" id="vid-url" placeholder="https://www.youtube.com/watch?v=...">
+      <button class="ibtn" id="vid-load-btn">Carregar</button>
+    </div>
+  </div>
+
+  <div class="vblock red">
+    <div class="vhead">
+      <span class="vlabel">// transmissão</span>
+      <span class="vstatus" style="color:var(--red2);">● REPRODUZINDO</span>
+    </div>
+    <div class="vcont" id="vid-cont">
+      <div class="vph"><div class="vph-icon">▶</div><p>Aguardando link</p></div>
+    </div>
+  </div>
+
+  <div class="sh" style="margin-top:36px;">
+    <div class="sh-txt">Arquivos de Vídeo</div>
+    <div class="sh-line"></div>
+    <button class="vadd-btn" id="vadd-btn">+ Adicionar Card</button>
+  </div>
+
+  <div class="vgrid" id="vgrid">
+    <div class="vcard" data-url="https://www.youtube.com/watch?v=8taUI7rkwqc" data-ytid="8taUI7rkwqc">
+      <div class="vthumb"><img src="https://img.youtube.com/vi/8taUI7rkwqc/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></div>
+      <div class="vinfo">
+        <div class="vtag">Conspiração</div>
+        <div class="vtitle">O Caso Epstein: O que foi Encoberto</div>
+        <div class="vmeta">Link salvo — clique para reproduzir</div>
+      </div>
+    </div>
+    <div class="vcard" data-url="https://www.youtube.com/watch?v=M-ufqHFpgp0" data-ytid="M-ufqHFpgp0">
+      <div class="vthumb"><img src="https://img.youtube.com/vi/M-ufqHFpgp0/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></div>
+      <div class="vinfo">
+        <div class="vtag">Iluminati</div>
+        <div class="vtitle">A Sociedade Secreta que Controla o Mundo</div>
+        <div class="vmeta">Link salvo — clique para reproduzir</div>
+      </div>
+    </div>
+    <div class="vcard" data-url="https://youtu.be/5Pj-_856SH8" data-ytid="5Pj-_856SH8">
+      <div class="vthumb"><img src="https://img.youtube.com/vi/5Pj-_856SH8/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"></div>
+      <div class="vinfo">
+        <div class="vtag">NASA</div>
+        <div class="vtitle">Missão Apollo: Verdades Suprimidas</div>
+        <div class="vmeta">Link salvo — clique para reproduzir</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TEORIA ===== -->
+<div class="wrap panel" id="pnl-t">
+
+  <div class="sh"><div class="sh-txt">Vídeo de Referência</div><div class="sh-line"></div></div>
+
+  <div class="iblock" style="border-left:3px solid var(--pur2);">
+    <span class="ilabel" style="color:var(--pur2);">↳ colar link de referência da teoria</span>
+    <div class="irow">
+      <input class="itext" type="url" id="teo-url" placeholder="https://www.youtube.com/watch?v=...">
+      <button class="ibtn pur" id="teo-load-btn">Carregar</button>
+    </div>
+  </div>
+
+  <div class="vblock pur">
+    <div class="vhead">
+      <span class="vlabel">// vídeo de evidência</span>
+      <span class="vstatus" style="color:var(--pur2);">● ANÁLISE</span>
+    </div>
+    <div class="vcont" id="teo-cont">
+      <div class="vph"><div class="vph-icon">◉</div><p>Nenhum vídeo carregado</p></div>
+    </div>
+  </div>
+
+  <div class="sh" style="margin-top:40px;"><div class="sh-txt">Análise Teórica</div><div class="sh-line"></div></div>
+
+  <div id="teo-entries">
+    <div class="tblock">
+      <div class="ttag">Teoria Central</div>
+      <span class="stamp">Classificado</span>
+      <h3>Os Iluminati e o Controle Global: Uma Análise</h3>
+      <p>Os Iluminati, originalmente fundados em 1776 por Adam Weishaupt na Bavária, dissolveram-se oficialmente poucos anos depois — ou assim nos fizeram acreditar. Evidências apontam para a continuidade da organização sob diferentes nomes, infiltrando-se em governos, bancos e meios de comunicação ao longo dos séculos.</p>
+      <p>A simbologia presente em notas de dólar, monumentos e logotipos corporativos não é coincidência. O <span class="redact">XXXXX XXXXX XXXXX</span> revela padrões sistemáticos de controle que atravessam gerações, culturas e fronteiras geopolíticas.</p>
+    </div>
+    <div class="tblock red">
+      <div class="ttag red">O Caso Epstein</div>
+      <h3>A Rede que Não Pode Ser Nomeada</h3>
+      <p>Jeffrey Epstein não suicidou-se. Essa é a conclusão de múltiplos especialistas forenses independentes. As câmeras "defeituosas", os guardas "adormecidos" e o transporte do corpo em contêiner fechado compõem um quadro que desafia qualquer explicação racional.</p>
+      <p>A famosa lista permanece <span class="redact">XXXXXXXXXXXXXXXXXX</span> protegida por ordens judiciais. Os nomes que aparecem nas margens dos documentos incluem figuras de <span class="redact">XXXXXXXXXXXXXXX</span> que continuam intocáveis.</p>
+    </div>
+  </div>
+
+  <div class="tform">
+    <span class="ilabel" style="color:var(--pur2);">↳ Adicionar nova entrada teórica</span>
+    <input type="text" id="teo-ti" placeholder="Título da teoria...">
+    <textarea id="teo-tx" rows="5" placeholder="Escreva sua análise aqui..."></textarea>
+    <button class="ibtn pur" id="teo-add-btn">+ Publicar Teoria</button>
+  </div>
+</div>
+
+<!-- ===== DOCUMENTOS ===== -->
+<div class="wrap panel" id="pnl-d">
+
+  <div class="sh"><div class="sh-txt">Arquivos PDF</div><div class="sh-line"></div></div>
+
+  <div class="dropzone" id="dropzone">
+    <input type="file" accept=".pdf" multiple id="file-input">
+    <div class="dicon">▣</div>
+    <div class="dtxt">Soltar PDFs aqui ou clicar para selecionar</div>
+    <div class="dsub">Somente .pdf — Acesso nível: Vermelho</div>
+  </div>
+
+  <div class="dlist" id="dlist">
+    <div class="ditem">
+      <div class="dicn"><div class="dicn-sym">◈</div></div>
+      <div class="dinfo">
+        <div class="dname">Relatório Warren — Versão Censurada.pdf</div>
+        <div class="dmeta">2.4 MB &nbsp;·&nbsp; Nov 1963 &nbsp;·&nbsp; CLASSIFICADO</div>
+      </div>
+      <div class="dacts"><button class="dbtn">Ver</button><button class="dbtn">Download</button></div>
+    </div>
+    <div class="ditem">
+      <div class="dicn"><div class="dicn-sym">◈</div></div>
+      <div class="dinfo">
+        <div class="dname">Projeto MKUltra — Arquivos Desclassificados.pdf</div>
+        <div class="dmeta">8.7 MB &nbsp;·&nbsp; Jan 1973 &nbsp;·&nbsp; VAZAMENTO</div>
+      </div>
+      <div class="dacts"><button class="dbtn">Ver</button><button class="dbtn">Download</button></div>
+    </div>
+    <div class="ditem">
+      <div class="dicn"><div class="dicn-sym">◈</div></div>
+      <div class="dinfo">
+        <div class="dname">Lista Epstein — Documentos Judiciais.pdf</div>
+        <div class="dmeta">1.1 MB &nbsp;·&nbsp; Jan 2024 &nbsp;·&nbsp; DESCLASSIFICADO</div>
+      </div>
+      <div class="dacts"><button class="dbtn">Ver</button><button class="dbtn">Download</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NOTÍCIAS ===== -->
+<div class="wrap panel" id="pnl-n">
+
+  <div class="sh"><div class="sh-txt">Registrar Notícia</div><div class="sh-line"></div></div>
+
+  <div class="nform">
+    <div class="ngrid">
+      <div class="nfield">
+        <span class="ilabel" style="color:var(--tea);">Título</span>
+        <input class="ninput" type="text" id="n-title" placeholder="Manchete da notícia...">
+      </div>
+      <div class="nfield">
+        <span class="ilabel" style="color:var(--tea);">Data</span>
+        <input class="ninput" type="date" id="n-date">
+      </div>
+      <div class="nfield">
+        <span class="ilabel" style="color:var(--tea);">Classificação</span>
+        <select class="nselect" id="n-tag">
+          <option value="c">CLASSIFICADO</option>
+          <option value="l">VAZAMENTO</option>
+          <option value="k">CONFIRMADO</option>
+          <option value="r">RUMOR</option>
+        </select>
+      </div>
+      <div class="nfield">
+        <span class="ilabel" style="color:var(--tea);">Link Fonte</span>
+        <input class="ninput" type="url" id="n-link" placeholder="https://...">
+      </div>
+      <div class="nfield full">
+        <span class="ilabel" style="color:var(--tea);">Conteúdo</span>
+        <textarea class="ntextarea" id="n-body" rows="4" placeholder="Texto completo da notícia..."></textarea>
+      </div>
+    </div>
+    <button class="nsubmit" id="n-submit">▶ Publicar Notícia</button>
+  </div>
+
+  <div class="sh"><div class="sh-txt">Feed de Inteligência</div><div class="sh-line"></div></div>
+
+  <div class="nlist" id="nlist">
+    <div class="nitem">
+      <div class="nmeta"><span class="ntag c">Classificado</span><span class="ndate">09 Jan 2024</span></div>
+      <div class="ntitle">Lista Epstein Divulgada: 170 Nomes em Documentos Judiciais</div>
+      <p class="nexcerpt">Um tribunal federal dos EUA ordenou a liberação de documentos relacionados ao caso Epstein, revelando mais de 170 indivíduos. Entre os nomes aparecem figuras políticas, empresários e celebridades que, por décadas, permaneceram protegidos pelo silêncio institucional.</p>
+      <a class="nlink" href="https://www.theguardian.com" target="_blank">↗ Acessar Fonte</a>
+    </div>
+    <div class="nitem">
+      <div class="nmeta"><span class="ntag l">Vazamento</span><span class="ndate">14 Mar 2023</span></div>
+      <div class="ntitle">Arquivos MKUltra: CIA Confirma Experiências com Controle Mental</div>
+      <p class="nexcerpt">Documentos desclassificados confirmam o Projeto MKUltra, programa secreto conduzido entre 1950 e 1970. Experiências foram realizadas sem consentimento, incluindo uso de LSD e tortura psicológica em cidadãos comuns e pacientes psiquiátricos.</p>
+      <a class="nlink" href="https://www.cia.gov" target="_blank">↗ Acessar Fonte</a>
+    </div>
+    <div class="nitem">
+      <div class="nmeta"><span class="ntag k">Confirmado</span><span class="ndate">26 Jul 2023</span></div>
+      <div class="ntitle">Audiência no Congresso EUA Trata de UAPs e Corpos Não Humanos</div>
+      <p class="nexcerpt">O Congresso realizou audiência histórica sobre programa secreto de recuperação de veículos de origem não humana. Ex-funcionários apontam para materiais biológicos desconhecidos mantidos em instalações classificadas por décadas.</p>
+      <a class="nlink" href="https://www.congress.gov" target="_blank">↗ Acessar Fonte</a>
+    </div>
+  </div>
+</div>
+
+<footer>ARQUIVO SOMBRIO &nbsp;·&nbsp; USO POR CONTA E RISCO &nbsp;·&nbsp; ◆</footer>
+
+<!-- Modal para card de vídeo -->
+<div class="modal-bg" id="vmodal">
+  <div class="modal">
+    <h4>// Configurar Card de Vídeo</h4>
+    <input type="text" id="vm-title" placeholder="Título do vídeo...">
+    <input type="text" id="vm-tag" placeholder="Tag (ex: Conspiração, NASA...)">
+    <input type="url" id="vm-url" placeholder="Link YouTube (opcional)">
+    <div class="modal-btns">
+      <button class="modal-ok" id="vm-ok">Confirmar</button>
+      <button class="modal-cancel" id="vm-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ---- TABS ---- */
+  var tabs = ['v','t','d','n'];
+  tabs.forEach(function(t){
+    document.getElementById('btn-'+t).addEventListener('click', function(){
+      tabs.forEach(function(x){
+        document.getElementById('btn-'+x).classList.remove('on');
+        document.getElementById('pnl-'+x).classList.remove('on');
+      });
+      document.getElementById('btn-'+t).classList.add('on');
+      document.getElementById('pnl-'+t).classList.add('on');
+    });
+  });
+
+  /* ---- YOUTUBE ---- */
+  function ytId(url){
+    var m = url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+  function ytFallback(id){
+    var url = 'https://www.youtube.com/watch?v='+id;
+    return '<div class="vph" style="gap:16px;">'
+      +'<div style="font-size:48px;opacity:.4;">▶</div>'
+      +'<p style="font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;opacity:.5;">Embed bloqueado pelo canal</p>'
+      +'<a href="'+url+'" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--red);color:#fff;font-family:\'Oswald\',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:11px 22px;text-decoration:none;" onmouseover="this.style.background=\'#e74c3c\'" onmouseout="this.style.background=\'#c0392b\'">&#9654; &nbsp;Assistir no YouTube</a>'
+      +'</div>';
+  }
+  function embedYT(cont, id){
+    cont.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1" allowfullscreen allow="autoplay;encrypted-media"></iframe>';
+    /* detecta erro de embed (ex: erro 153) via mensagem do iframe */
+    var handled = false;
+    function onMsg(e){
+      if(handled) return;
+      try {
+        var d = (typeof e.data === 'string') ? JSON.parse(e.data) : e.data;
+        if(d && d.event === 'onError' && (d.info === 153 || d.info === 150 || d.info === 101)){
+          handled = true;
+          cont.innerHTML = ytFallback(id);
+          window.removeEventListener('message', onMsg);
+        }
+      } catch(ex){}
+    }
+    window.addEventListener('message', onMsg);
+    /* fallback por tempo: se após 4s o iframe reportar erro, mostra botão */
+    setTimeout(function(){
+      if(handled) return;
+      var iframe = cont.querySelector('iframe');
+      if(!iframe) return;
+      try {
+        iframe.contentWindow.postMessage('{"event":"listening"}','*');
+      } catch(ex){
+        /* cross-origin block = embed funcionou ou sem acesso, ignora */
+      }
+    }, 4000);
+  }
+  function errYT(cont){
+    cont.innerHTML = '<div class="vph"><div class="vph-icon">✕</div><p>Link inválido</p></div>';
+  }
+
+  /* vídeos tab */
+  var vidUrl = document.getElementById('vid-url');
+  var vidCont = document.getElementById('vid-cont');
+  document.getElementById('vid-load-btn').addEventListener('click', function(){
+    verificarSenha(function(){
+      var id = ytId(vidUrl.value.trim());
+      if(id) embedYT(vidCont, id); else errYT(vidCont);
+    });
+  });
+  vidUrl.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('vid-load-btn').click(); });
+
+  /* ---- VERIFICAÇÃO DE SENHA GLOBAL ---- */
+  function verificarSenha(callback){
+    var senha = prompt('🔒 Acesso restrito — insira a senha:');
+    if(senha === null) return;
+    if(senha === '666' || senha === 'elite'){
+      callback();
+    } else {
+      alert('⛔ Senha incorreta. Acesso negado.');
+    }
+  }
+
+  /* teoria tab */
+  var teoUrl = document.getElementById('teo-url');
+  var teoCont = document.getElementById('teo-cont');
+  document.getElementById('teo-load-btn').addEventListener('click', function(){
+    verificarSenha(function(){
+      var id = ytId(teoUrl.value.trim());
+      if(id) embedYT(teoCont, id); else errYT(teoCont);
+    });
+  });
+  teoUrl.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('teo-load-btn').click(); });
+
+  /* ---- PERSISTÊNCIA localStorage (apenas cards de vídeo) ---- */
+  var STORE_CARDS = 'arquivo_vcards';
+
+  function saveCards(){
+    var cards = [];
+    document.querySelectorAll('#vgrid .vcard').forEach(function(card){
+      cards.push({
+        title: card.querySelector('.vtitle').textContent,
+        tag:   card.querySelector('.vtag').textContent,
+        url:   card.dataset.url || '',
+        ytid:  card.dataset.ytid || ''
+      });
+    });
+    try{ localStorage.setItem(STORE_CARDS, JSON.stringify(cards)); }catch(e){}
+  }
+
+  function loadCards(){
+    var raw;
+    try{ raw = localStorage.getItem(STORE_CARDS); }catch(e){ return; }
+    if(!raw) return;
+    var cards;
+    try{ cards = JSON.parse(raw); }catch(e){ return; }
+    var grid = document.getElementById('vgrid');
+    /* remove cards padrão se houver dados salvos */
+    grid.innerHTML = '';
+    cards.forEach(function(data){
+      var card = buildCard(data.title, data.tag, data.url, data.ytid);
+      grid.appendChild(card);
+      attachCardClick(card);
+    });
+  }
+
+  function buildCard(title, tag, url, ytid){
+    var card = document.createElement('div');
+    card.className = 'vcard';
+    card.dataset.url = url || '';
+    if(ytid) card.dataset.ytid = ytid;
+    var thumbHtml = ytid
+      ? '<img src="https://img.youtube.com/vi/'+ytid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">'
+      : '<div class="vthumb-ph">▶</div>';
+    var metaTxt = url ? 'Link salvo — clique para reproduzir' : 'Clique para adicionar link';
+    card.innerHTML = '<div class="vthumb">'+thumbHtml+'</div>'
+      +'<div class="vinfo"><div class="vtag">'+tag+'</div><div class="vtitle">'+title+'</div><div class="vmeta">'+metaTxt+'</div></div>';
+    return card;
+  }
+
+  /* ---- VIDEO CARDS ---- */
+  var cardClickCounts = new WeakMap();
+  var cardClickTimers = new WeakMap();
+  var currentCard = null;
+
+  function openEditModal(card){
+    var senha = prompt('🔒 Acesso restrito — insira a senha:');
+    if(senha === null) return; /* cancelou */
+    if(senha !== '666' && senha !== 'elite'){
+      alert('⛔ Senha incorreta. Acesso negado.');
+      return;
+    }
+    document.getElementById('vm-title').value = card.querySelector('.vtitle').textContent;
+    document.getElementById('vm-tag').value   = card.querySelector('.vtag').textContent;
+    document.getElementById('vm-url').value   = card.dataset.url || '';
+    currentCard = card;
+    document.getElementById('vmodal').classList.add('show');
+  }
+
+  function attachCardClick(card){
+    cardClickCounts.set(card, 0);
+    card.addEventListener('click', function(e){
+      /* ignora clique se veio de dentro do vgrid listener (play) */
+      var count = (cardClickCounts.get(card) || 0) + 1;
+      cardClickCounts.set(card, count);
+
+      /* reseta contador após 800ms sem clique */
+      if(cardClickTimers.get(card)) clearTimeout(cardClickTimers.get(card));
+      cardClickTimers.set(card, setTimeout(function(){
+        cardClickCounts.set(card, 0);
+      }, 800));
+
+      if(count >= 3){
+        cardClickCounts.set(card, 0);
+        clearTimeout(cardClickTimers.get(card));
+        openEditModal(card);
+      }
+    });
+  }
+
+  /* Carregar cards salvos ao iniciar (substitui os cards padrão do HTML) */
+  var hasSaved;
+  try{ hasSaved = localStorage.getItem(STORE_CARDS); }catch(e){ hasSaved = null; }
+  if(hasSaved){
+    loadCards();
+  } else {
+    /* primeira vez: registra clique nos cards padrão já no HTML */
+    document.querySelectorAll('.vcard').forEach(attachCardClick);
+  }
+
+  document.getElementById('vm-cancel').addEventListener('click', function(){
+    document.getElementById('vmodal').classList.remove('show');
+  });
+  document.getElementById('vmodal').addEventListener('click', function(e){
+    if(e.target===this) this.classList.remove('show');
+  });
+
+  /* Confirmar edição de card existente */
+  document.getElementById('vm-ok').addEventListener('click', function(){
+    var title = document.getElementById('vm-title').value.trim();
+    var tag   = document.getElementById('vm-tag').value.trim();
+    var url   = document.getElementById('vm-url').value.trim();
+    if(!title) return;
+    if(currentCard){
+      currentCard.querySelector('.vtitle').textContent = title;
+      currentCard.querySelector('.vtag').textContent   = tag || 'Arquivo';
+      currentCard.dataset.url = url;
+      if(url){
+        currentCard.querySelector('.vmeta').textContent = 'Link salvo — clique para reproduzir';
+        var id = ytId(url);
+        if(id){
+          var thumb = currentCard.querySelector('.vthumb');
+          thumb.innerHTML = '<img src="https://img.youtube.com/vi/'+id+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">';
+          currentCard.dataset.ytid = id;
+        }
+      }
+      saveCards(); /* ← salva após editar */
+    }
+    document.getElementById('vmodal').classList.remove('show');
+  });
+
+  /* Play card no player principal */
+  document.getElementById('vgrid').addEventListener('click', function(e){
+    var card = e.target.closest('.vcard');
+    if(!card) return;
+    var id = card.dataset.ytid;
+    var url = card.dataset.url;
+    if(id){
+      /* tenta embed; se bloqueado, ytFallback já exibe botão */
+      embedYT(vidCont, id);
+      window.scrollTo({top:0, behavior:'smooth'});
+    } else if(url){
+      window.open(url, '_blank');
+    }
+  });
+
+  /* Adicionar novo card */
+  document.getElementById('vadd-btn').addEventListener('click', function(){
+    currentCard = null;
+    document.getElementById('vm-title').value = '';
+    document.getElementById('vm-tag').value = '';
+    document.getElementById('vm-url').value = '';
+    document.getElementById('vmodal').classList.add('show');
+  });
+
+  /* Confirmar criação de novo card */
+  document.getElementById('vm-ok').addEventListener('click', function(){
+    if(currentCard !== null) return;
+    var title = document.getElementById('vm-title').value.trim();
+    var tag   = document.getElementById('vm-tag').value.trim() || 'Arquivo';
+    var url   = document.getElementById('vm-url').value.trim();
+    if(!title){ document.getElementById('vmodal').classList.remove('show'); return; }
+    var id = ytId(url);
+    var card = buildCard(title, tag, url, id || '');
+    document.getElementById('vgrid').appendChild(card);
+    attachCardClick(card);
+    saveCards(); /* ← salva após criar */
+    document.getElementById('vmodal').classList.remove('show');
+  }, {capture:false});
+
+  /* ---- JSONBIN — persistência compartilhada ---- */
+  var BIN_ID  = '6a0e0db4ee5a733b12f0e1e7';
+  var BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+  var BIN_KEY = '$2a$10$Nr4DzkadfRVoAvXAWEQJWO5mDh52RY7tE9XwYvn9E8st1/GBXd./W';
+  var binData = { noticias: [], teorias: [] };
+
+  function fetchBin(callback){
+    fetch(BIN_URL + '/latest', { headers: { 'X-Access-Key': BIN_KEY } })
+      .then(function(r){ return r.json(); })
+      .then(function(json){ binData = json.record || { noticias:[], teorias:[] }; callback(binData); })
+      .catch(function(){ callback(binData); });
+  }
+
+  function saveBin(callback){
+    fetch(BIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Access-Key': BIN_KEY },
+      body: JSON.stringify(binData)
+    }).then(function(){ if(callback) callback(); })
+      .catch(function(e){ alert('Erro ao salvar: ' + e.message); });
+  }
+
+  /* ---- TEORIA ADD ---- */
+  var tagLabels = {c:'Classificado',l:'Vazamento',k:'Confirmado',r:'Rumor'};
+
+  function addTeoria(entry){
+    var div = document.createElement('div');
+    div.className = 'tblock';
+    div.dataset.saved = '1';
+    div.dataset.title = entry.title;
+    div.dataset.text  = entry.text;
+    div.innerHTML = '<div class="ttag">Entrada</div><h3>'+entry.title+'</h3>'
+      + entry.text.split('\n').filter(Boolean).map(function(l){ return '<p>'+l+'</p>'; }).join('');
+    document.getElementById('teo-entries').appendChild(div);
+    div.scrollIntoView({behavior:'smooth'});
+  }
+
+  document.getElementById('teo-add-btn').addEventListener('click', function(){
+    verificarSenha(function(){
+      var title = document.getElementById('teo-ti').value.trim();
+      var text  = document.getElementById('teo-tx').value.trim();
+      if(!title||!text){ alert('Preencha título e texto.'); return; }
+      var entry = { title: title, text: text };
+      binData.teorias.push(entry);
+      saveBin(function(){
+        addTeoria(entry);
+        document.getElementById('teo-ti').value='';
+        document.getElementById('teo-tx').value='';
+      });
+    });
+  });
+
+  /* ---- NOTÍCIAS ---- */
+  function addNoticia(d, prepend){
+    var ds = d.date ? new Date(d.date+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'}) : 'Hoje';
+    var item = document.createElement('div');
+    item.className = 'nitem';
+    item.dataset.saved = '1';
+    item.dataset.title = d.title; item.dataset.body = d.body;
+    item.dataset.date  = d.date || ''; item.dataset.tag = d.tag; item.dataset.link = d.link || '';
+    item.innerHTML = '<div class="nmeta"><span class="ntag '+d.tag+'">'+tagLabels[d.tag]+'</span><span class="ndate">'+ds+'</span></div>'
+      +'<div class="ntitle">'+d.title+'</div>'
+      +'<p class="nexcerpt">'+d.body+'</p>'
+      +(d.link?'<a class="nlink" href="'+d.link+'" target="_blank">↗ Acessar Fonte</a>':'');
+    var list = document.getElementById('nlist');
+    if(prepend) list.insertBefore(item, list.firstChild);
+    else list.insertBefore(item, list.firstChild);
+    if(!prepend) item.scrollIntoView({behavior:'smooth'});
+  }
+
+  document.getElementById('n-submit').addEventListener('click', function(){
+    verificarSenha(function(){
+      var d = {
+        title: document.getElementById('n-title').value.trim(),
+        body:  document.getElementById('n-body').value.trim(),
+        date:  document.getElementById('n-date').value,
+        tag:   document.getElementById('n-tag').value,
+        link:  document.getElementById('n-link').value.trim()
+      };
+      if(!d.title||!d.body){ alert('Preencha o título e o conteúdo.'); return; }
+      binData.noticias.unshift(d);
+      saveBin(function(){
+        addNoticia(d, false);
+        document.getElementById('n-title').value='';
+        document.getElementById('n-date').value='';
+        document.getElementById('n-link').value='';
+        document.getElementById('n-body').value='';
+      });
+    });
+  });
+
+  /* Carrega dados do JSONBin ao abrir o site */
+  fetchBin(function(data){
+    (data.teorias  || []).forEach(function(e){ addTeoria(e); });
+    (data.noticias || []).forEach(function(d){ addNoticia(d, false); });
+  });
+
+  /* ---- DOCUMENTOS ---- */
+  function handleFiles(files){
+    var list = document.getElementById('dlist');
+    Array.prototype.forEach.call(files, function(f){
+      if(!f.name.endsWith('.pdf')) return;
+      var size = (f.size/1048576).toFixed(1)+' MB';
+      var date = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+      var url  = URL.createObjectURL(f);
+      var item = document.createElement('div');
+      item.className = 'ditem';
+      item.innerHTML = '<div class="dicn"><div class="dicn-sym">◈</div></div>'
+        +'<div class="dinfo"><div class="dname">'+f.name+'</div><div class="dmeta">'+size+' &nbsp;·&nbsp; '+date+' &nbsp;·&nbsp; LOCAL</div></div>'
+        +'<div class="dacts"><button class="dbtn"><a href="'+url+'" target="_blank">Ver</a></button>'
+        +'<button class="dbtn"><a href="'+url+'" download="'+f.name+'">Download</a></button></div>';
+      list.insertBefore(item, list.firstChild);
+    });
+  }
+  document.getElementById('file-input').addEventListener('change', function(e){
+    var files = e.target.files;
+    if(!files || !files.length) return;
+    verificarSenha(function(){ handleFiles(files); });
+    /* reseta o input para permitir nova verificação mesmo com o mesmo arquivo */
+    e.target.value = '';
+  });
+  var dz = document.getElementById('dropzone');
+  dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.style.borderColor='rgba(212,160,23,.8)'; });
+  dz.addEventListener('dragleave', function(){ dz.style.borderColor=''; });
+  dz.addEventListener('drop', function(e){
+    e.preventDefault(); dz.style.borderColor='';
+    var files = e.dataTransfer.files;
+    verificarSenha(function(){ handleFiles(files); });
+  });
+
+})();
+</script>
+</body>
+</html>
